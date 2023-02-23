@@ -247,7 +247,8 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == '__main__':
-    app = QApplication([]).setStyle('WindowsXP')
+    app = QApplication([])
+    app.setStyle('WindowsXP')
     window = MainWindow()
     window.show()
     app.exec()
