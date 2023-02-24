@@ -150,6 +150,8 @@ class MainWindow(QMainWindow):
         self.destination_folder_label.setText(f"Destination folder : {self.dir_path_destination}")
         self.class_list = sorted([dirname for dirname in os.listdir(self.dir_path_destination) if os.path.isdir(
             os.path.join(self.dir_path_destination, dirname)) and dirname != 'Done'])
+        for i in range(self.class_layout.count()): 
+            self.class_layout.itemAt(i).widget().deleteLater()
         for class_folder in self.class_list:
             self.class_layout.addWidget(QCheckBox(class_folder))
         self.Reset_checkboxes()
@@ -203,6 +205,8 @@ class MainWindow(QMainWindow):
                     os.mkdir(self.dir_path_destination + os.path.sep + clas)
                 shutil.copyfile(current_picture, self.dir_path_destination + os.path.sep + clas + os.path.sep + os.path.split(current_picture)[1])
             self.class_input.clear()
+            for i in range(self.class_layout.count()): 
+                self.class_layout.itemAt(i).widget().deleteLater()
             for class_folder in self.class_list:
                 self.class_layout.addWidget(QCheckBox(class_folder))
 
