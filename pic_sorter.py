@@ -12,9 +12,9 @@ from PyQt6.QtWidgets import (
     QApplication,
     QMainWindow,
     QPushButton,
-    QCheckBox,
     QLineEdit,
     QLabel,
+    QGroupBox,
     QScrollArea,
     QHBoxLayout,
     QVBoxLayout,
@@ -46,9 +46,17 @@ class MainWindow(QMainWindow):
         self.class_input = QLineEdit()
         self.top_button_layout.addWidget(self.class_input)
 
-        # Class checkboxes
+        # Class PushButtones
+        self.classes_groupbox_scroll_area = QScrollArea()
+        self.classes_groupbox_scroll_area.setMaximumWidth(200)
+        self.classes_groupbox = QGroupBox()
+        self.classes_groupbox_scroll_area.setWidget(self.classes_groupbox)
+        self.classes_groupbox_scroll_area.setWidgetResizable(True)
+        self.classes_groupbox.setLayout(self.class_layout)
         for class_folder in self.class_list:
-            self.class_layout.addWidget(QCheckBox(class_folder))
+            button = QPushButton(class_folder)
+            button.setCheckable(True)
+            self.class_layout.addWidget(button)
 
         # Sort button
         self.sort_button = QPushButton("Sort")
@@ -73,10 +81,13 @@ class MainWindow(QMainWindow):
         self.bottom_button_layout.addWidget(self.choose_folder_to_sort)
 
         # Choose destination folder button
-        self.choose_destination_folder = QPushButton("Select Destination Folder")
+        self.choose_destination_folder = QPushButton(
+            "Select Destination Folder")
         self.choose_destination_folder.setToolTip("Select Destination Folder")
-        self.choose_destination_folder.setStatusTip("Select Destination Folder")
-        self.choose_destination_folder.clicked.connect(self.Choose_destination_folder)
+        self.choose_destination_folder.setStatusTip(
+            "Select Destination Folder")
+        self.choose_destination_folder.clicked.connect(
+            self.Choose_destination_folder)
         self.bottom_button_layout.addWidget(self.choose_destination_folder)
 
         # File name info
@@ -89,12 +100,14 @@ class MainWindow(QMainWindow):
 
         # Folder to sort info
         self.folder_to_sort_label = QLabel()
-        self.folder_to_sort_label.setText(f"Sorting folder : {self.dir_path_to_sort}")
+        self.folder_to_sort_label.setText(
+            f"Sorting folder : {self.dir_path_to_sort}")
         self.folders_info_layout.addWidget(self.folder_to_sort_label)
 
         # Destination folder name info
         self.destination_folder_label = QLabel()
-        self.destination_folder_label.setText(f"Destination folder : {self.dir_path_destination}")
+        self.destination_folder_label.setText(
+            f"Destination folder : {self.dir_path_destination}")
         self.folders_info_layout.addWidget(self.destination_folder_label)
 
         # Media
@@ -104,7 +117,8 @@ class MainWindow(QMainWindow):
         self.label.setMovie(self.movie)
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.scroll_area.setWidget(self.label)
-        self.scroll_area.setSizeAdjustPolicy(self.scroll_area.SizeAdjustPolicy.AdjustToContents)
+        self.scroll_area.setSizeAdjustPolicy(
+            self.scroll_area.SizeAdjustPolicy.AdjustToContents)
         self.picture_layout.addWidget(self.scroll_area)
 
         # Open the file when clicked
@@ -117,7 +131,7 @@ class MainWindow(QMainWindow):
         self.page_layout.addLayout(self.folders_info_layout)
         self.page_layout.addLayout(self.bottom_button_layout)
         self.window_layout.addLayout(self.page_layout)
-        self.window_layout.addLayout(self.class_layout)
+        self.window_layout.addWidget(self.classes_groupbox_scroll_area)
         self.container = QWidget()
         self.container.setLayout(self.window_layout)
         self.setCentralWidget(self.container)
@@ -134,8 +148,13 @@ class MainWindow(QMainWindow):
 
     def Choose_folder_to_sort(self):
         # Obfuscation / 20
-        self.dir_path_to_sort = p if (p := QFileDialog.getExistingDirectory(self, "Open Directory to sort", ".", QFileDialog.Option.ShowDirsOnly)) else (sys._MEIPASS if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__)))
-        self.folder_to_sort_label.setText(f"Sorting folder : {self.dir_path_to_sort}")
+        self.dir_path_to_sort = p if (p := QFileDialog.getExistingDirectory(self, "Open Directory to sort", ".", QFileDialog.Option.ShowDirsOnly)) else (
+            sys._MEIPASS if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__)))
+        self.dir_path_destination = self.dir_path_to_sort
+        self.folder_to_sort_label.setText(
+            f"Sorting folder : {self.dir_path_to_sort}")
+        self.destination_folder_label.setText(
+            f"Sorting folder : {self.dir_path_to_sort}")
         self.media_list = [filename for filename in os.listdir(
             self.dir_path_to_sort) if os.path.isfile(os.path.join(self.dir_path_to_sort, filename))]
         self.sort_button.setEnabled(True)
@@ -143,28 +162,43 @@ class MainWindow(QMainWindow):
         self.skip_button.setEnabled(True)
         self.class_input.setEnabled(True)
         self.Init_media()
-        self.Reset_checkboxes()
-
-    def Choose_destination_folder(self):
-        self.dir_path_destination = p if (p := QFileDialog.getExistingDirectory(self, "Open destintion directory", ".", QFileDialog.Option.ShowDirsOnly)) else (sys._MEIPASS if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__)))
-        self.destination_folder_label.setText(f"Destination folder : {self.dir_path_destination}")
+        # Init classes
         self.class_list = sorted([dirname for dirname in os.listdir(self.dir_path_destination) if os.path.isdir(
             os.path.join(self.dir_path_destination, dirname)) and dirname != 'Done'])
-        for i in range(self.class_layout.count()): 
+        for i in range(self.class_layout.count()):
             self.class_layout.itemAt(i).widget().deleteLater()
         for class_folder in self.class_list:
-            self.class_layout.addWidget(QCheckBox(class_folder))
-        self.Reset_checkboxes()
+            button = QPushButton(class_folder)
+            button.setCheckable(True)
+            self.class_layout.addWidget(button)
+        self.Reset_PushButtones()
+
+    def Choose_destination_folder(self):
+        self.dir_path_destination = p if (p := QFileDialog.getExistingDirectory(self, "Open destintion directory", ".", QFileDialog.Option.ShowDirsOnly)) else (
+            sys._MEIPASS if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__)))
+        self.destination_folder_label.setText(
+            f"Destination folder : {self.dir_path_destination}")
+        self.class_list = sorted([dirname for dirname in os.listdir(self.dir_path_destination) if os.path.isdir(
+            os.path.join(self.dir_path_destination, dirname)) and dirname != 'Done'])
+        for i in range(self.class_layout.count()):
+            self.class_layout.itemAt(i).widget().deleteLater()
+        for class_folder in self.class_list:
+            button = QPushButton(class_folder)
+            button.setCheckable(True)
+            self.class_layout.addWidget(button)
+        self.Reset_PushButtones()
 
     def Skip(self):
         if len(self.media_list):
             self.movie.stop()
             choice = random.choice(self.media_list)
-            img = imread(self.dir_path_to_sort + os.path.sep + choice)
-            self.movie.setFileName(self.dir_path_to_sort + os.path.sep + choice)
+            img = imread(self.dir_path_to_sort + '/' + choice)
+            self.movie.setFileName(
+                self.dir_path_to_sort + '/' + choice)
             self.file_label.setText(f"Filename : {choice}")
-            if (img := imread(self.dir_path_to_sort + os.path.sep + choice)) is not None:
-                self.file_resolution.setText(f"Resolution : {img.shape[1]} x {img.shape[0]}")
+            if (img := imread(self.dir_path_to_sort + '/' + choice)) is not None:
+                self.file_resolution.setText(
+                    f"Resolution : {img.shape[1]} x {img.shape[0]}")
             else:
                 self.file_resolution.setText("")
             self.movie.start()
@@ -177,63 +211,82 @@ class MainWindow(QMainWindow):
             self.skip_button.setEnabled(False)
             self.class_input.setEnabled(False)
             self.file_label.setText("No media to sort !")
-        self.Reset_checkboxes()
-            
-    def Reset_checkboxes(self):
+        self.Reset_PushButtones()
+
+    def Reset_PushButtones(self):
         for i in range(self.class_layout.count()):
             widget = self.class_layout.itemAt(i).widget()
-            if isinstance(widget, QCheckBox):
+            if isinstance(widget, QPushButton):
                 widget.setChecked(False)
 
     def Open_in_Browser(self):
         if not platform.system() == 'Windows':
             webbrowser.open_new_tab(f"file:///{self.movie.fileName()}")
         else:
-            subprocess.Popen(["start", "firefox", f"file:///{self.movie.fileName()}"], shell=True).stderr
+            subprocess.Popen(
+                ["start", "firefox", f"file:///{self.movie.fileName()}"], shell=True).stderr
 
     def Sort(self):
+        to_delete = False
         # New picture
         current_picture = self.movie.fileName()
         self.Init_media()
         self.label.adjustSize()
-
         # Create classes folders if need be
         if self.class_input.text() != "":
             classes = self.class_input.text().split()
             for clas in classes:
                 if not os.path.isdir(os.path.join(self.dir_path_destination, clas)):
-                    os.mkdir(self.dir_path_destination + os.path.sep + clas)
-                shutil.copyfile(current_picture, self.dir_path_destination + os.path.sep + clas + os.path.sep + os.path.split(current_picture)[1])
-            self.class_input.clear()
-            for i in range(self.class_layout.count()): 
-                self.class_layout.itemAt(i).widget().deleteLater()
-            for class_folder in self.class_list:
-                self.class_layout.addWidget(QCheckBox(class_folder))
-
+                    os.mkdir(self.dir_path_destination + '/' + clas)
+                shutil.copyfile(current_picture, self.dir_path_destination +
+                                '/' + clas + '/' + os.path.split(current_picture)[1])
+                if clas == "ToDelete":
+                    to_delete = True
+                    os.rename(current_picture, self.dir_path_destination + '/' +
+                              'ToDelete' + '/' + os.path.split(current_picture)[1])
         # Copy the file in each class folder
         for i in range(self.class_layout.count()):
             widget = self.class_layout.itemAt(i).widget()
-            if isinstance(widget, QCheckBox):
+            if isinstance(widget, QPushButton):
                 if widget.isChecked():
-                    shutil.copyfile(current_picture, self.dir_path_destination + os.path.sep + widget.text() + os.path.sep + os.path.split(current_picture)[1])
-                    widget.setChecked(False)
-
-        if not os.path.isdir(os.path.join(self.dir_path_destination, 'Done')):
-            os.mkdir(self.dir_path_destination + os.path.sep + 'Done')
-        os.rename(current_picture, self.dir_path_destination + '/' +'Done' + '/' + os.path.split(current_picture)[1])
+                    shutil.copyfile(current_picture, self.dir_path_destination + '/' +
+                                    widget.text() + '/' + os.path.split(current_picture)[1])
+                    if widget.text() == "ToDelete":
+                        to_delete = True
+                        os.rename(current_picture, self.dir_path_destination + '/' +
+                                  'ToDelete' + '/' + os.path.split(current_picture)[1])
+        if to_delete != True:
+            if not os.path.isdir(os.path.join(self.dir_path_destination, 'Done')):
+                os.mkdir(self.dir_path_destination + '/' + 'Done')
+            os.rename(current_picture, self.dir_path_destination + '/' +
+                      'Done' + '/' + os.path.split(current_picture)[1])
+        # Reset widgets
+        self.class_input.clear()
+        self.class_list = sorted([dirname for dirname in os.listdir(self.dir_path_destination) if os.path.isdir(
+            os.path.join(self.dir_path_destination, dirname)) and dirname != 'Done'])
+        while self.class_layout.count():
+            item = self.class_layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
+        for class_folder in self.class_list:
+            button = QPushButton(class_folder)
+            button.setCheckable(True)
+            self.class_layout.addWidget(button)
 
     def Init_media(self):
         # Select a random picture
         if len(self.media_list):
             self.movie.stop()
             choice = random.choice(self.media_list)
-            img = imread(self.dir_path_to_sort + os.path.sep + choice)
+            img = imread(self.dir_path_to_sort + '/' + choice)
             self.media_list.remove(choice)
             self.movie.setFileName(
-                self.dir_path_to_sort + os.path.sep + choice)
+                self.dir_path_to_sort + '/' + choice)
             self.file_label.setText(choice)
-            if (img := imread(self.dir_path_to_sort + os.path.sep + choice)) is not None:
-                self.file_resolution.setText(f"{img.shape[1]} x {img.shape[0]}")
+            if (img := imread(self.dir_path_to_sort + '/' + choice)) is not None:
+                self.file_resolution.setText(
+                    f"{img.shape[1]} x {img.shape[0]}")
             else:
                 self.file_resolution.setText("")
             self.movie.start()
@@ -247,7 +300,6 @@ class MainWindow(QMainWindow):
             self.skip_button.setEnabled(False)
             self.class_input.setEnabled(False)
             self.file_label.setText("No media to sort !")
-        self.Reset_checkboxes()
 
 
 if __name__ == '__main__':
